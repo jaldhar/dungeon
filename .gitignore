@@ -1,0 +1,4 @@
+dungeon
+*.o
+*.gch
+valgrind.log
