@@ -28,9 +28,9 @@ using namespace std;
 
 namespace {
 
-    struct ViewImpl {
-        ViewImpl();
-        ~ViewImpl()=default;
+    struct RenderImpl {
+        RenderImpl();
+        ~RenderImpl()=default;
 
         void    drawTitle();
         void    refresh();
@@ -48,23 +48,23 @@ namespace {
         string       _titleText;
     } impl;
 
-    ViewImpl::ViewImpl() : _title{nullptr}, _viewport{nullptr}, _lines{0},
+    RenderImpl::RenderImpl() : _title{nullptr}, _viewport{nullptr}, _lines{0},
     _cols{0}, _titleText() {
     }
 
-    void ViewImpl::drawTitle() {
+    void RenderImpl::RenderTitle() {
         wclear(_title);
         const int len = _titleText.length();
         mvwaddstr(_title, 0, (impl._cols - len)/2, _titleText.c_str());
         wnoutrefresh(_title);
     }
 
-    void ViewImpl::refresh() {
+    void RenderImpl::refresh() {
         redrawwin(_title);
         doupdate();
     }
 
-    void ViewImpl::resize() {
+    void RenderImpl::resize() {
         getmaxyx(stdscr, _lines, _cols);
         wbkgd(stdscr, ' ');
 
@@ -72,21 +72,21 @@ namespace {
         wbkgd(_title, ' ' | COLOR_PAIR(2));
     }
 
-    void ViewImpl::setTitleText(string titleText) {
+    void RenderImpl::setTitleText(string titleText) {
         _titleText = titleText;
     }
 
-    void ViewImpl::setTitleWin(WINDOW*& win) {
+    void RenderImpl::setTitleWin(WINDOW*& win) {
         _title = win;
     }
 
-    int ViewImpl::createTitleWin(WINDOW* win, int /* ncols */) {
+    int RenderImpl::createTitleWin(WINDOW* win, int /* ncols */) {
         impl.setTitleWin(win);
 
         return 0;
     }
 
-    void ViewImpl::end(int /* sig */) {
+    void RenderImpl::end(int /* sig */) {
         curs_set(1);
         endwin();
         clear();
@@ -98,14 +98,14 @@ void Render::init(string titleText) {
     setlocale(LC_ALL, "POSIX");
 
     struct sigaction act;
-    act.sa_handler = ViewImpl::end;
+    act.sa_handler = RenderImpl::end;
     sigemptyset (&act.sa_mask);
     act.sa_flags = 0;
     sigaction(SIGINT, &act, NULL);
     sigaction(SIGSEGV, &act, NULL);
 
     impl.setTitleText(titleText);
-    ripoffline(1, ViewImpl::createTitleWin);
+    ripoffline(1, RenderImpl::createTitleWin);
 
     initscr();
     cbreak();
