@@ -24,7 +24,13 @@ using namespace std;
 #endif
 
 #include "render.h"
+#include "tile.h"
 #include "world.h"
+
+using TILEMAP = map<TERRAIN, chtype>;
+
+static const int TILEHEIGHT = 1;
+static const int TILEWIDTH = 1;
 
 namespace {
 
@@ -33,6 +39,8 @@ namespace {
         ~RenderImpl()=default;
 
         void    drawTitle();
+        void    renderTitle();
+        void    renderViewport(World& world, int top, int left);
         void    refresh();
         void    resize();
         void    setTitleText(string titleText);
@@ -46,17 +54,49 @@ namespace {
         int          _lines;
         int          _cols;
         string       _titleText;
+        TILEMAP      _tilemap;
     } impl;
 
     RenderImpl::RenderImpl() : _title{nullptr}, _viewport{nullptr}, _lines{0},
-    _cols{0}, _titleText() {
+    _cols{0}, _titleText(), _tilemap() {
     }
 
-    void RenderImpl::RenderTitle() {
+    void RenderImpl::renderTitle() {
         wclear(_title);
         const int len = _titleText.length();
         mvwaddstr(_title, 0, (impl._cols - len)/2, _titleText.c_str());
         wnoutrefresh(_title);
+    }
+
+    void RenderImpl::renderViewport(World& world, int top, int left) {
+        int worldHeight = world.height();
+        int worldWidth = world.width();
+
+        for (int row = top; row < impl._lines + top; row += TILEHEIGHT) {
+            if (row < 0 || row >= worldHeight) {
+                continue;
+            }
+
+            for (int col = left; col < _cols + left; col += TILEWIDTH) {
+                if (col < 0 || col >= worldWidth) {
+                    continue;
+                }
+
+                chtype c;
+                Tile& t = world.tileAt(row, col);
+
+                if (t._visible) {
+                    c = impl._tilemap[t._terrain];
+                    c |= COLOR_PAIR(2);
+                } else {
+                    continue;
+                }
+
+                mvwaddch(_viewport, row, col, c);
+            }
+        }
+
+        wnoutrefresh(_viewport);
     }
 
     void RenderImpl::refresh() {
@@ -121,9 +161,24 @@ void Render::init(string titleText) {
         init_pair(2, COLOR_BLACK, COLOR_WHITE);
     }
 
+    impl._tilemap[TERRAIN::EMPTY]    = ' '; // use of ACS_* requires this goes
+    impl._tilemap[TERRAIN::CORRIDOR] = '#'; // after call to initscr().
+    impl._tilemap[TERRAIN::FLOOR]    = '.';
+    impl._tilemap[TERRAIN::C_WALL]   = '+';
+    impl._tilemap[TERRAIN::H_WALL]   = ACS_HLINE;
+    impl._tilemap[TERRAIN::V_WALL]   = ACS_VLINE;
+    impl._tilemap[TERRAIN::UL_WALL]  = ACS_ULCORNER;
+    impl._tilemap[TERRAIN::UR_WALL]  = ACS_URCORNER;
+    impl._tilemap[TERRAIN::LR_WALL]  = ACS_LRCORNER;
+    impl._tilemap[TERRAIN::LL_WALL]  = ACS_LLCORNER;
+    impl._tilemap[TERRAIN::TT_WALL]  = ACS_TTEE;
+    impl._tilemap[TERRAIN::RT_WALL]  = ACS_RTEE;
+    impl._tilemap[TERRAIN::BT_WALL]  = ACS_BTEE;
+    impl._tilemap[TERRAIN::LT_WALL]  = ACS_LTEE;
+
     curs_set(0);
     impl.resize();
-    impl.drawTitle();
+    impl.renderTitle();
 }
 
 // Called every time the screen has to be redrawn.  There are two special
@@ -138,7 +193,12 @@ void Render::update(DISPLAY display, World& world) {
         } else if (display == DISPLAY::RESIZE) {
             impl.resize();
         } else {
-            // render
+            int playerCol = world.playerCol();
+            int playerRow = world.playerRow();
+            int top = playerRow - (impl._lines + 1) / 2;
+            int left = playerCol - (impl._cols + 1) / 2;
+
+            impl.renderViewport(world, top, left);
         }
 }
 

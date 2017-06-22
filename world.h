@@ -7,10 +7,17 @@
 #ifndef _WORLD_H_
 #define _WORLD_H_
 
+#include "tile.h"
+
 struct World {
     World() {};
     ~World()=default;
 
+    int height() const;
+    int width() const;
+    int playerRow() const;
+    int playerCol() const;
+    Tile& tileAt(int row, int col);
 };
 
 #endif

@@ -12,6 +12,7 @@ PROGRAM=dungeon
 OBJECTS=dungeon.o \
 	input.o \
 	render.o \
+	tile.o \
 	world.o
 
 .POSIX:

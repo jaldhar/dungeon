@@ -13,7 +13,6 @@ using namespace std;
 #include "input.h"
 #include "world.h"
 
-
 using COMMANDMAP = map<int, COMMAND>;
 
 namespace {
