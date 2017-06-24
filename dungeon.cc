@@ -8,6 +8,7 @@
 #include <string>
 using namespace std;
 
+#include "create.h"
 #include "display.h"
 #include "input.h"
 #include "render.h"
@@ -20,7 +21,13 @@ int main() {
     World  world;
     Render render;
 
+    {
+        Create create;
+        create.init(world);
+    }
+
     render.init(TITLE);
+    render.update(DISPLAY::RENDER, world);
 
     DISPLAY display;
     while((display = input.update()) != DISPLAY::END) {

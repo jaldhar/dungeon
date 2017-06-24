@@ -10,10 +10,11 @@
 #include "terrain.h"
 
 struct Tile {
-    Tile() {};
+    Tile() : _visible{true}, _passable{false}, _terrain{TERRAIN::EMPTY} {};
     ~Tile()=default;
 
     bool    _visible;
+    bool    _passable;
     TERRAIN _terrain;
 };
 

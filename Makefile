@@ -10,6 +10,7 @@ CXXFLAGS=-std=c++14 -O2 -g -Wall -Wextra -Wpedantic -Wcast-qual -Wformat=2 -Wsha
 LDFLAGS=-lncurses
 PROGRAM=dungeon
 OBJECTS=dungeon.o \
+	create.o \
 	input.o \
 	render.o \
 	tile.o \
